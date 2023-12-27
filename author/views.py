@@ -5,6 +5,10 @@ from django.contrib.auth import authenticate, login , update_session_auth_hash, 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from posts.models import Post
+from django.contrib.auth.views import LoginView,LogoutView
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.views.generic.edit import CreateView
 # Create your views here.
 
 # def add_author(request):
@@ -18,7 +22,7 @@ from posts.models import Post
 #         author_form = forms.AuthorForm()
 #     return render(request, 'add_author.html', {'form' : author_form})
 
-def register(request):
+def register1(request):
     if request.method == 'POST':
         register_form = forms.RegistrationForm(request.POST)
         if register_form.is_valid():
@@ -30,7 +34,27 @@ def register(request):
         register_form = forms.RegistrationForm()
     return render(request, 'register.html', {'form' : register_form, 'type' : 'Register'})
 
-def user_login(request):
+
+class register(CreateView):
+    form_class = forms.RegistrationForm
+    template_name = 'register.html'  # Specify your registration template
+    success_url = reverse_lazy('register')  # Redirect to login page after successful registration
+
+    def form_valid(self, form):
+        # Your custom logic for a valid form submission
+        # For example, you can add extra processing here
+
+        # Call the parent class's form_valid method to perform the default registration behavior
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Your custom logic for an invalid form submission
+        # For example, you can add extra processing here
+
+        # Call the parent class's form_invalid method to perform the default behavior
+        return super().form_invalid(form)
+
+def user_login1(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, request.POST)
         if form.is_valid():
@@ -42,11 +66,22 @@ def user_login(request):
                 login(request, user)
                 return redirect('profile')
             else:
-                messages.warning(request, 'Login informtion incorrect')
+                messages.warning(request, 'Login information incorrect')
                 return redirect('register')
     else:
         form = AuthenticationForm()
         return render(request, 'register.html', {'form' : form, 'type' : 'Login'})
+
+class user_login(LoginView):
+    template_name = 'register.html'  # Set your custom template name
+    success_url = reverse_lazy('profile')
+
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+
 
 @login_required
 def profile(request):
@@ -81,6 +116,12 @@ def pass_change(request):
     return render(request, 'pass_change.html', {'form' : form})
 
 
-def user_logout(request):
+def user_logout1(request):
     logout(request)
     return redirect('user_login')
+
+
+class user_logout(LogoutView):
+    next_page = reverse_lazy('user_login')  # Replace with your success URL
+
+    
